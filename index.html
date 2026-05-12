@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebCam Security System v1.0</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Integrated Login Screen -->
+    <div id="login-screen" class="page">
+        <div class="login-card glass">
+            <div class="logo-icon" style="margin: 0 auto 30px; width: 60px; height: 60px; font-size: 2rem;">
+                <span>🛡️</span>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; margin-bottom: 5px;">Security Terminal</h1>
+            <!-- Login Tabs -->
+            <div class="login-tabs" style="display: flex; margin-bottom: 25px; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border);">
+                <button id="tab-operator" class="tab-btn active" onclick="switchLoginTab('operator')" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); color: white; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.3s;">Operator (OTP)</button>
+                <button id="tab-admin" class="tab-btn" onclick="switchLoginTab('admin')" style="flex: 1; padding: 12px; background: transparent; color: var(--text-dim); border: none; cursor: pointer; font-family: 'Inter', sans-serif; border-left: 1px solid var(--glass-border); transition: 0.3s;">Admin</button>
+            </div>
+
+            <p id="login-subtitle" style="color: var(--text-dim); margin-bottom: 25px;">Direct Email Authentication Mode</p>
+            
+            <!-- Operator OTP Section -->
+            <div id="operator-login-section">
+                <!-- State 1: Request Code -->
+                <div id="login-request-view">
+                    <button onclick="requestLoginCode()" class="btn btn-primary" style="height: 50px; font-size: 1.1rem; margin-top: 10px;">Request Security Code</button>
+                </div>
+
+                <!-- State 2: Verify Code -->
+                <div id="login-verify-view" class="hidden">
+                     <div class="input-group" style="text-align: left;">
+                        <label>6-Digit Security Code</label>
+                        <input type="text" id="login-otp-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.8rem; letter-spacing: 12px; font-weight: bold; font-family: 'Outfit', sans-serif; color: var(--success);" onkeydown="if(event.key==='Enter') verifyOTP()">
+                    </div>
+                    <button onclick="verifyOTP()" class="btn" style="height: 50px; font-size: 1.1rem; background: var(--success); color: white; width: 100%; margin-top: 10px;">Authorize & Decrypt</button>
+                    <div style="margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
+                        <a href="#" onclick="requestLoginCode()" style="font-size: 0.85rem; color: var(--primary); text-decoration: none;">Resend Code</a>
+                        <span style="color: var(--glass-border);">|</span>
+                        <a href="#" onclick="showRequestView()" style="font-size: 0.85rem; color: var(--text-dim); text-decoration: none;">Restart Login</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Password Section -->
+            <div id="admin-login-section" class="hidden">
+                <div class="input-group" style="text-align: left;">
+                    <label>Admin Username</label>
+                    <input type="text" id="admin-user" placeholder="admin" onkeydown="if(event.key==='Enter') adminLogin()">
+                </div>
+                <div class="input-group" style="text-align: left;">
+                    <label>Admin Password</label>
+                    <input type="password" id="admin-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter') adminLogin()">
+                </div>
+                <button onclick="adminLogin()" class="btn btn-primary" style="height: 50px; font-size: 1.1rem; width: 100%; margin-top: 10px;">System Login</button>
+            </div>
+
+            <div id="login-error" class="hidden alert-danger" style="margin-top: 25px;">
+                Authentication failed. Please verify settings or code.
+            </div>
+        </div>
+    </div>
+
+    <!-- Lock Screen Overly -->
+    <div id="lock-screen" class="page hidden">
+        <div class="lock-card glass">
+            <div class="lock-icon">🔒</div>
+            <h2 id="lock-title">System Locked</h2>
+            <p id="lock-subtitle">Enter password to resume protection.</p>
+            <div class="input-group">
+                <input type="password" id="unlock-password" placeholder="••••••••">
+            </div>
+            <button id="btn-unlock" class="btn btn-primary" style="margin-bottom: 10px;">Identify & Unlock</button>
+            <button id="btn-voice-auth" class="btn" style="background: var(--surface); color: white; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>🎙️</span> Voice Authentication
+            </button>
+            <div id="intruder-alert" class="hidden alert-danger" style="margin-top: 15px;">
+                Access Denied! Please check your password or voice.
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="main-app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <span>🛡️</span>
+                </div>
+                <h1>VisionGuard</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item active" id="btn-dashboard" onclick="showDashboard()">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" id="btn-settings" onclick="showSettings()">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </div>
+                <div class="nav-item lock-btn" id="btn-lock" onclick="lockSystem()">
+                    <span class="icon">🔒</span>
+                    <span>Lock System</span>
+                </div>
+                <div class="nav-item" id="btn-scan" onclick="showScan()">
+                    <span class="icon">🔍</span>
+                    <span>Security Scan</span>
+                </div>
+            </nav>
+
+            <div class="system-status-card">
+                <h3>System Status</h3>
+                <div class="status-indicator" id="main-status-indicator">
+                    <div class="pulse-ring"></div>
+                    <span id="system-status-text">Active</span>
+                </div>
+                <p class="status-detail">Version 1.0.4 - Secure</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content-area">
+            <!-- Dashboard Page -->
+            <section id="dashboard-page" class="page active">
+                <header class="main-header">
+                    <h2>Security Terminal</h2>
+                    <div class="user-profile">
+                        <span class="timestamp" id="header-time">09:35 AM</span>
+                        <div class="profile-container">
+                            <div class="avatar" id="profile-avatar">AD</div>
+                            <div class="profile-dropdown hidden" id="profile-dropdown">
+                                <div class="dropdown-header">System Admin</div>
+                                <div class="dropdown-item">👤 Profile Details</div>
+                                <div class="dropdown-item">➕ Add Another Profile</div>
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-item logout" onclick="location.reload()">🚪 Log out</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="dashboard-grid">
+                    <!-- Left: Feed Section -->
+                    <section class="feed-section glass">
+                        <div class="section-title">
+                            <h3>Live Stream Feed</h3>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="recording-status" class="status-tag hidden" style="background: hsla(0, 100%, 60%, 0.15); color: var(--danger); display: flex; align-items: center; gap: 5px;">
+                                    <div class="rec-dot"></div> REC
+                                </span>
+                                <span id="cam-status" class="status-tag active">Active</span>
+                            </div>
+                        </div>
+                        <div class="video-container">
+                            <video id="video-feed" autoplay playsinline muted></video>
+                            <img id="ip-feed" class="hidden" alt="IP Camera Feed">
+                            <div id="video-overlay" class="hidden">
+                                <div class="lock-icon">🔒</div>
+                                <p>CAMERA DISABLED</p>
+                            </div>
+                        </div>
+                        <!-- Controls below feed -->
+                        <div class="camera-controls">
+                            <button id="btn-enable" class="btn btn-success">Enable Camera</button>
+                            <button id="btn-disable" class="btn btn-danger">Disable Camera</button>
+                            <button id="btn-capture" class="btn btn-primary" style="flex: 0.5;">📸 Capture</button>
+                        </div>
+                    </section>
+
+                    <!-- Right: Utility Section -->
+                    <aside class="utility-section">
+                        <!-- AI Threat Engine -->
+                        <div class="utility-card glass" id="threat-engine-card">
+                            <h4>AI Threat Engine</h4>
+                            <div class="info-content" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>User Presence:</span>
+                                    <span id="ai-liveness-status" class="status-tag" style="background: var(--surface);">Initializing...</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Threat Score:</span>
+                                    <span id="ai-threat-score" class="status-tag active">SAFE</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Info -->
+                        <div class="utility-card glass">
+                            <h4>Project Info</h4>
+                            <div class="info-content">
+                                <p><strong>System:</strong> WebCam Spyware Security</p>
+                                <p><strong>Real-time:</strong> Enabled</p>
+                                <p id="log-count"><strong>Logs:</strong> 0 entries</p>
+                                <button class="btn btn-primary" onclick="window.viewRecordings()" style="margin-top: 15px;">📂 View My Recordings</button>
+                            </div>
+                        </div>
+
+                        <!-- Password Section -->
+                        <div class="utility-card glass">
+                            <h4>Security Configuration</h4>
+                            <div class="input-group">
+                                <label>Old Password</label>
+                                <input type="password" id="old-password" placeholder="••••••••">
+                            </div>
+                            <div class="input-group">
+                                <label>New Password</label>
+                                <input type="password" id="new-password" placeholder="••••••••">
+                            </div>
+                            <div class="input-group">
+                                <label>Confirm</label>
+                                <input type="password" id="confirm-password" placeholder="••••••••">
+                            </div>
+                            <button id="btn-update-pwd" class="btn btn-primary">Update Password</button>
+                        </div>
+
+                        <!-- Logs Section -->
+                        <div class="utility-card glass logs-card">
+                            <div class="logs-header">
+                                <h4>Recent Incidents</h4>
+                                <div class="log-actions">
+                                    <button id="btn-refresh-logs" title="Refresh">🔄</button>
+                                    <button id="btn-clear-logs" title="Clear">🗑️</button>
+                                </div>
+                            </div>
+                            <div id="logs-container" class="logs-list">
+                                <!-- Logs will be inserted here -->
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="settings-page" class="page hidden">
+                <header class="main-header">
+                    <h2>System Settings</h2>
+                </header>
+                <div class="settings-grid">
+                    <div class="settings-card glass">
+                        <h3>General Settings</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <strong>Auto-start System</strong>
+                                <p>Automatically enable camera protection on launch</p>
+                            </div>
+                            <input type="checkbox" id="auto-start-cam">
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <strong>Geo-Fencing Protection</strong>
+                                <p>Only allow access from registered safe locations</p>
+                            </div>
+                            <input type="checkbox" id="geo-fence-enabled">
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <strong>Cloud Logging</strong>
+                                <p>Sync security incidents to your cloud account</p>
+                            </div>
+                            <input type="checkbox" id="cloud-logging-enabled">
+                        </div>
+                    </div>
+
+                    <div class="settings-card glass">
+                        <h3>OTP & SMTP Security Configuration</h3>
+                        <p class="status-detail" style="margin-bottom: 15px;">These parameters control the 2FA codes sent during login and breach alerts.</p>
+                        
+                        <div class="input-group">
+                            <label>Administrator Email (Destination)</label>
+                            <input type="email" id="dash-admin-email" placeholder="admin@example.com">
+                        </div>
+
+                        <div class="input-group">
+                            <label>SMTP Host</label>
+                            <input type="text" id="dash-smtp-host" placeholder="smtp.gmail.com">
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label>Port</label>
+                                <input type="number" id="dash-smtp-port" placeholder="587">
+                            </div>
+                            <div class="input-group" style="flex: 2;">
+                                <label>SMTP User</label>
+                                <input type="text" id="dash-smtp-user" placeholder="user@gmail.com">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>SMTP Password / App Password</label>
+                            <input type="password" id="dash-smtp-pass" placeholder="••••••••">
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="saveDashboardSMTPSettings()" style="font-size: 0.9rem; padding: 12px; flex: 2;">Update Security Parameters</button>
+                            <button id="btn-test-smtp" class="btn" onclick="testSMTPSettings()" style="background: var(--surface); color: white; flex: 1; font-size: 0.9rem;">🧪 Test</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card glass">
+                        <h3>Device & Camera Source</h3>
+                        <div class="input-group">
+                            <label>Source Type</label>
+                            <select id="cam-source-type" class="form-select" onchange="toggleCamSource()">
+                                <option value="local">Local Webcam</option>
+                                <option value="url">IP Camera (URL)</option>
+                            </select>
+                        </div>
+                        <div id="url-source-group" class="input-group hidden">
+                            <label>Camera URL (MJPEG/HTTP)</label>
+                            <input type="text" id="cam-url" placeholder="http://192.168.1.100:8080/video">
+                        </div>
+                        <div class="input-group">
+                            <label>Capture Quality</label>
+                            <select class="form-select">
+                                <option>Auto Optimize</option>
+                                <option>High Definition (1080p)</option>
+                                <option>Standard Definition (720p)</option>
+                                <option>Low Bandwidth</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveCamSettings()">Apply Source</button>
+                    </div>
+
+                    <div class="settings-card glass">
+                        <h3>Premium Customization</h3>
+                        <div class="theme-selector">
+                            <div class="theme-option active" style="background: var(--primary);"></div>
+                            <div class="theme-option" style="background: var(--success);"></div>
+                            <div class="theme-option" style="background: #e91e63;"></div>
+                            <div class="theme-option" style="background: #ff9800;"></div>
+                        </div>
+                        <p class="status-detail">Sync across all your devices enabled.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Scan Page (Audit) -->
+            <section id="scan-page" class="page hidden">
+                <header class="main-header">
+                    <h2>Security Audit Console</h2>
+                </header>
+                <div class="scan-container glass">
+                    <div class="scan-hud">
+                        <div class="scan-circle">
+                            <div class="scan-line"></div>
+                            <div class="scan-data">
+                                <span id="scan-pct">0%</span>
+                                <p id="scan-status-text">Ready for Scan</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scan-controls">
+                        <button id="btn-start-scan" class="btn btn-primary" onclick="runSecurityAudit()">Deep Heuristic Scan</button>
+                        <p class="status-detail">Scanning for background camera hijacking & suspicious drivers.</p>
+                    </div>
+                    <div id="scan-results" class="hidden">
+                        <h3>Security Diagnosis Report</h3>
+                        <div class="diag-list" id="diag-list">
+                            <!-- Report items will go here -->
+                        </div>
+                        <div id="scan-summary-msg"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="script.js?v=3"></script>
+</body>
+</html>
